@@ -1,28 +1,20 @@
-import pdfrw
-from pdfrw import PdfDict
 
-template = pdfrw.PdfReader('test_form.pdf')
-
-ans = template.Root.Pages.Kids[0].Annots[0].update(PdfDict(V='(test)'))
-
-
-pdfrw.PdfWriter().write('output.pdf', template)
-
-fs = template.Root.AcroForm.Fields
-
-for f in fs:
-    print(f.Kids)
-    print(f.T.decode())
-    
 
 from flask import Flask, redirect, flash, request, url_for
 from werkzeug.utils import secure_filename
 import os
+import json
+import pdfrw
+from pdfrw import PdfDict
 
 app = Flask(__name__)
 
 app.config['UPLOAD_FOLDER'] = 'upload'
-ALLOWED_EXTENSIONS = set(['pdf', 'txt'])
+
+app.config['MAX_CONTENT_LENGTH'] = 30 * 1024 * 1024
+app.config["SECRET_KEY"] = "123456"
+
+ALLOWED_EXTENSIONS = set(['pdf', 'txt', "json"])
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -31,24 +23,27 @@ def allowed_file(filename):
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        print(request.form)
-        return ''
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit an empty part without filename
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            # secure_filename will return a secure version of it. 
-            # This filename can then safely be stored on a regular file system and passed to os.path.join().
-            # The filename returned is an ASCII only string for maximum portability.
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        config = request.files.get("config")
+        if config is None:
+            return '', 500        
+        
+        js_conf = json.loads(config.read())
+        if js_conf['key'] != app.config["SECRET_KEY"]:
+            return '', 403
+
+        for file_document in js_conf["files"]:
+            for file_request in request.files.values():
+                if file_request.filename == file_document["filename"]:
+                    template = pdfrw.PdfReader(file_document["filename"])
+                    for field in file_document["fields"]:
+                        for an in template.Root.Pages.Kids[0].Annots:
+                            if an.T.to_unicode() == field["key"]:
+                                an.update(PdfDict(V=field["value"]))
+                    pdfrw.PdfWriter().write('output.pdf', template)
+                        
+
+
 
     return '''
     <!doctype html>

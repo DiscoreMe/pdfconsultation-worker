@@ -1,0 +1,22 @@
+{
+    "files": [
+        {
+            "filename": "test_form.pdf",
+            "fields": [
+                {
+                    "key": "field1",
+                    "value": "text2"
+                },
+                {
+                    "key": "field2",
+                    "value": "text2"
+                },
+                {
+                    "key": "field3",
+                    "value": "text3"
+                }
+            ]
+        }
+    ],
+    "key": "123456"
+}
