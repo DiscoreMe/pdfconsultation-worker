@@ -12,10 +12,7 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-app.config['UPLOAD_FOLDER'] = 'upload'
-
 app.config['MAX_CONTENT_LENGTH'] = 30 * 1024 * 1024
-app.config["SECRET_KEY"] = "123456"
 
 ALLOWED_EXTENSIONS = set(['pdf', "json"])
 
@@ -61,4 +58,8 @@ def upload_file():
         return send_file('tmp.tar', mimetype="application/tar")
 
 if __name__ == "__main__":
+    password = os.environ.get("SECRET_KEY")
+    if password is None:
+        password = '123456'
+    app.config["SECRET_KEY"] = password
     app.run()
