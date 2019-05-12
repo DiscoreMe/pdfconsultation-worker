@@ -20,7 +20,11 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
+def main_page():
+    return "It's work!"
+
+@app.route('/', methods=['POST'])
 def upload_file():
     if request.method == 'POST':
 
@@ -62,4 +66,4 @@ if __name__ == "__main__":
     if password is None:
         password = '123456'
     app.config["SECRET_KEY"] = password
-    app.run()
+    app.run(host="0.0.0.0", port=5000)
