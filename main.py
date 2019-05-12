@@ -44,7 +44,7 @@ def upload_file():
             for file_request in request.files.values():
                 if file_request.filename == file_document["filename"]:
                     if allowed_file(file_request.filename):
-                        template = pdfrw.PdfReader(file_document["filename"])
+                        template = pdfrw.PdfReader(file_request)
                         for field in file_document["fields"]:
                             for an in template.Root.Pages.Kids[0].Annots:
                                 if an.T.to_unicode() == field["key"]:
